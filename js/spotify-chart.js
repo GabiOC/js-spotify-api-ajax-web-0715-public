@@ -1,7 +1,7 @@
 var url = "http://charts.spotify.com/api/tracks/most_streamed/us/weekly/latest";
 
 var dataSetProperties = {
-  label: 'Spotify Chart of Top 20 Streamed Songs on Spotify with their Steam Count', 
+  label: 'Spotify Chart of Top 20 Streamed Songs on Spotify with their Stream Count', 
   fillColor: 'rgba(220,220,220,0.5)', 
   strokeColor: 'rgba(220,220,220,0.8)', 
   highlightFill: 'rgba(220,220,220,0.75)', 
@@ -14,20 +14,26 @@ $(function() {
 
 function extractTop20Tracks(tracks) {
   // your code here
+  return tracks.slice(0,20);
 }
 
 function extractNumberOfStreams(tracks) {
   // your code here
+  return tracks.map(function(t){ return t.num_streams });
 }
 
 function extractNames(tracks) {
   // your code here
+  return tracks.map(function(t){ return t.track_name });
 }
 
-function chartData(labels, inputData) {
+function chartData(inputLabels, inputData) {
   // your code here
 
   // use the dataSetProperties variable defined above if it helps
+
+  dataSetProperties.data = inputData;
+  return { labels : inputLabels, datasets : [dataSetProperties] }
 }
 
 function getSpotifyTracks(callback){
@@ -36,6 +42,14 @@ function getSpotifyTracks(callback){
   // parameter the data it received
 
   // use the url variable defined above if it helps
+
+  $.ajax({
+    url: url,
+    dataType: 'jsonp', 
+    success: function(response) {
+      callback(response); 
+    }
+  });
 }
 
 function success(parsedJSON) {
@@ -49,4 +63,11 @@ function success(parsedJSON) {
   //  5. make a variable `ctx` and select the canvas with the id of spotify-chart
   //     * also make sure to specify 2d context
   //  6. make a new bar chart!
+
+  var tracks = extractTop20Tracks(parsedJSON.tracks)
+  var names = extractNames(tracks)
+  var streams = extractNumberOfStreams(tracks)
+  var data = chartData(names, streams)
+  var ctx = $('#spotify-chart').get(0).getContext("2d")
+  var myBarChart = new Chart(ctx).Bar(data);
 }
